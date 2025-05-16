@@ -90,12 +90,20 @@ fun AccountScreen(
 
         Column(modifier = Modifier.padding(horizontal = 16.dp)) {
             // Checking account
-            AccountCard(navController = navController, title = "Checking", icon = Icons.Default.Home) {
+            AccountCard(
+                title = "Checking",
+                icon = Icons.Default.Home,
+                onClick = { navController.navigate("CheckingDetailScreen") }
+            ) {
                 LabelWithValue("Số dư", balance.toString(), Color(0xFF2E7D32))
             }
 
             // Saving account
-            AccountCard(navController = navController, title = "Saving", icon = Icons.Default.Savings) {
+            AccountCard(
+                title = "Saving",
+                icon = Icons.Default.Savings,
+                onClick = { navController.navigate("SavingDetailScreen") }
+            ) {
                 LabelWithValue("Số dư", savingBalance.toString(), Color(0xFF2E7D32))
                 LabelWithValue("Từ", savingDateStart)
                 LabelWithValue("Đến", savingDateEnd)
@@ -104,7 +112,11 @@ fun AccountScreen(
             }
 
             // Mortgage account
-            AccountCard(navController = navController, title = "Mortgage", icon = Icons.Default.Money) {
+            AccountCard(
+                title = "Mortgage",
+                icon = Icons.Default.Money,
+                onClick = { navController.navigate("MortgageDetailScreen") }
+            ) {
                 LabelWithValue("Số dư", mortgage.toString(), Color(0xFFC62828))
                 LabelWithValue("Phải trả mỗi tháng", monthlyPayment.toString(), Color(0xFFC62828))
             }
@@ -113,10 +125,15 @@ fun AccountScreen(
 }
 
 @Composable
-fun AccountCard(navController: NavController, title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, content: @Composable ColumnScope.() -> Unit) {
+fun AccountCard(
+    title: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    onClick: () -> Unit,
+    content: @Composable ColumnScope.() -> Unit
+) {
     Card(
         modifier = Modifier
-            .clickable {  }
+            .clickable { onClick() }
             .fillMaxWidth()
             .padding(vertical = 8.dp),
         shape = RoundedCornerShape(12.dp),
@@ -138,6 +155,7 @@ fun AccountCard(navController: NavController, title: String, icon: androidx.comp
         }
     }
 }
+
 
 @Composable
 fun LabelWithValue(label: String, value: String, valueColor: Color = Color.Black) {

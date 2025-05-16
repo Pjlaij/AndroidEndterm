@@ -10,9 +10,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.mobilebanking.screens.components.DropdownMenuBox
 import androidx.compose.foundation.clickable
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.mobilebanking.viewmodel.PayResult
+import com.example.mobilebanking.viewmodel.SavingOnlineViewModel
 
 
 @Composable
@@ -24,7 +29,9 @@ fun TransactionScreen(
     var selectedType by remember { mutableStateOf("Nạp tiền") }
     var selectedAccount by remember { mutableStateOf(accountOptions.first()) }
     var amountText by remember { mutableStateOf("") }
-
+    val context = LocalContext.current
+    val viewModel : SavingOnlineViewModel = viewModel()
+    var payState = viewModel.savingState
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -80,12 +87,38 @@ fun TransactionScreen(
             onClick = {
                 val amount = amountText.toDoubleOrNull() ?: 0.0
                 if (amount > 0) {
-                    onSubmitTransaction(selectedType, selectedAccount, amount)
+                    if (selectedAccount == "Checking"){
+                        if (selectedType == "Nạp tiền"){
+                            viewModel.depositToSaving(context, amount.toInt())
+                        }
+                        else {
+                            viewModel.withdrawFromSaving(context, amount.toInt())
+                        }
+                    }
                 }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Xác nhận")
+        }
+        when (payState) {
+            is PayResult.Loading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            }
+            is PayResult.Success -> {
+                // Navigate or show success message
+                LaunchedEffect(Unit) {
+                    navController.navigate("TransferSuccessScreen/Saving?amount=$amountText")
+                }
+            }
+            is PayResult.Error -> {
+                Text(
+                    text = (payState as PayResult.Error).message,
+                    color = Color.Red,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+            }
+            else -> {}
         }
     }
 }
