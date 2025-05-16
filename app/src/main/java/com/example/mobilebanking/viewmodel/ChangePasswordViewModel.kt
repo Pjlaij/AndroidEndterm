@@ -43,7 +43,8 @@ class ChangePasswordViewModel : ViewModel() {
                             editState = EditResult.Success
                         }
                         .addOnFailureListener { authError ->
-                            editState = EditResult.Error("Failed to update FirebaseAuth password: ${authError.message}")
+                            editState =
+                                EditResult.Error("Failed to update FirebaseAuth password: ${authError.message}")
                         }
                 }
                 .addOnFailureListener { dbError ->

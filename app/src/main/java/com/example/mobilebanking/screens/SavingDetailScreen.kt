@@ -56,13 +56,13 @@ fun SavingDetailScreen(navController: NavController) {
 
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
             Button(
-                onClick = { /* handle deposit */ },
+                onClick = { navController.navigate("TransactionScreen")},
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF81D4FA))
             ) {
                 Text("Nạp tiền")
             }
             Button(
-                onClick = { /* handle withdraw */ },
+                onClick = { navController.navigate("TransactionScreen") },
                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFCDD2))
             ) {
                 Text("Rút tiền")
