@@ -136,7 +136,7 @@ fun SameBankTransferScreen(
         Button(
             onClick = {
                 if (userInfo != null) {
-                    viewModel.pay(context, recipientAccount, amount.toInt(), content, "Chuyển khoảng")
+                    viewModel.pay(context, recipientAccount,  amount.toInt(), content, fromAccount, "Chuyển khoảng")
                 }
             },
             modifier = Modifier
