@@ -1,9 +1,11 @@
 package com.example.mobilebanking.screens
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.result.launch
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -18,7 +20,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.mobilebanking.viewmodel.FaceIdSettingViewModel
 import java.io.InputStream
 
 
@@ -27,16 +31,19 @@ fun FaceIdSettingScreen(
     navController: NavController,
     initialEnabled: Boolean = false,
     onBack: () -> Unit = {},
-    onSave: (Boolean, Uri?) -> Unit = { _, _ -> }
+    onSave: (Boolean, Bitmap?) -> Unit = { _, _ -> }
 ) {
-    var isEnabled by remember { mutableStateOf(initialEnabled) }
-    var selectedImageUri by remember { mutableStateOf<Uri?>(null) }
-
+    val viewModel: FaceIdSettingViewModel = viewModel()
     val context = LocalContext.current
-    val imagePickerLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri ->
-        selectedImageUri = uri
+    var isEnabled by remember { mutableStateOf(initialEnabled) }
+    var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            capturedBitmap = bitmap
+        }
     }
 
     Column(
@@ -90,37 +97,19 @@ fun FaceIdSettingScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         if (isEnabled) {
-            Text("Upload your Face ID image:", fontWeight = FontWeight.Medium)
+            Text("Capture your face:", fontWeight = FontWeight.Medium)
             Spacer(modifier = Modifier.height(12.dp))
 
-            Button(
-                onClick = { imagePickerLauncher.launch("image/*") },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Choose Image")
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            selectedImageUri?.let { uri ->
-                val inputStream: InputStream? = context.contentResolver.openInputStream(uri)
-                val bitmap = BitmapFactory.decodeStream(inputStream)
-                bitmap?.let {
-                    Image(
-                        bitmap = it.asImageBitmap(),
-                        contentDescription = null,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(220.dp)
-                    )
-                }
-            }
+            // Use your reusable Composable
+            com.example.mobilebanking.helper.CaptureFaceScreen(viewModel)
         }
+
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { onSave(isEnabled, selectedImageUri) },
+            onClick = { capturedBitmap?.let { viewModel.saveFaceEmbedding(context,
+                capturedBitmap!!,{})} },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp),
@@ -130,3 +119,4 @@ fun FaceIdSettingScreen(
         }
     }
 }
+

@@ -16,7 +16,14 @@ class SameBankTransferViewModel : ViewModel() {
 
     private val dbRef = FirebaseDatabase.getInstance().getReference("users")
 
-    fun pay(context: Context, receiverAccountNumber: String, amount: Int, content: String, type: String) {
+    fun pay(
+        context: Context,
+        receiverAccountNumber: String,
+        amount: Int,
+        content: String,
+        account: String,
+        type: String // should be either "main" or "saving"
+    ) {
         payState = PayResult.Loading
 
         val prefs = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
@@ -28,16 +35,25 @@ class SameBankTransferViewModel : ViewModel() {
         }
 
         viewModelScope.launch {
-            // Step 1: Load sender info
             dbRef.child(senderUid).get().addOnSuccessListener { senderSnapshot ->
                 val sender = senderSnapshot.getValue(UserInfo::class.java)
 
-                if (sender == null || sender.balance < amount) {
-                    payState = PayResult.Error("Insufficient balance or sender not found.")
+                if (sender == null) {
+                    payState = PayResult.Error("Sender not found.")
                     return@addOnSuccessListener
                 }
 
-                // Step 2: Find receiver by account number
+                val senderBalance = if (account == "Saving")
+                    sender.savingAccount?.savingAccountBalance ?: -1
+                else
+                    sender.balance
+
+                if (senderBalance < amount) {
+                    payState = PayResult.Error("Insufficient funds in $type account.")
+                    return@addOnSuccessListener
+                }
+
+                // Step 2: Find receiver
                 dbRef.get().addOnSuccessListener { allUsersSnapshot ->
                     var receiverUid: String? = null
                     var receiver: UserInfo? = null
@@ -56,29 +72,51 @@ class SameBankTransferViewModel : ViewModel() {
                         return@addOnSuccessListener
                     }
 
-                    val updatedSenderBalance = sender.balance - amount
+                    // Update balances
                     val updatedReceiverBalance = receiver.balance + amount
-
-                    dbRef.child(senderUid).child("balance").setValue(updatedSenderBalance)
                     dbRef.child(receiverUid).child("balance").setValue(updatedReceiverBalance)
 
-                    // Step 4: Add history
-                    val historyEntry = History(
-                        from = sender.accountNumber,
-                        to = receiverAccountNumber,
-                        amount = amount,
-                        type = type,
-                        content = content,
-                        timestamp = System.currentTimeMillis()
-                    )
+                    if (account == "Saving") {
+                        val updatedSenderSaving = senderBalance - amount
+                        dbRef.child(senderUid)
+                            .child("savingAccount")
+                            .child("savingAccountBalance")
+                            .setValue(updatedSenderSaving)
+                    } else {
+                        val updatedSenderBalance = senderBalance - amount
+                        dbRef.child(senderUid)
+                            .child("balance")
+                            .setValue(updatedSenderBalance)
+                    }
 
-                    val senderHistoryRef = dbRef.child(senderUid).child("history").push()
-                    val receiverHistoryRef = dbRef.child(receiverUid).child("history").push()
+                    // Add history
+                    var historyEntry = History()
+                    if (account == "Saving") {
+                         historyEntry = History(
+                            from = sender.accountNumber + "'s Saving",
+                            to = receiverAccountNumber,
+                            amount = amount,
+                            type = type,
+                            content = content,
+                            timestamp = System.currentTimeMillis()
+                        )
+                    }
+                    else{
+                         historyEntry = History(
+                            from = sender.accountNumber,
+                            to = receiverAccountNumber,
+                            amount = amount,
+                            type = type,
+                            content = content,
+                            timestamp = System.currentTimeMillis()
+                        )
+                    }
 
-                    senderHistoryRef.setValue(historyEntry)
-                    receiverHistoryRef.setValue(historyEntry)
+                    dbRef.child(senderUid).child("history").push().setValue(historyEntry)
+                    dbRef.child(receiverUid).child("history").push().setValue(historyEntry)
 
                     payState = PayResult.Success
+
                 }.addOnFailureListener {
                     payState = PayResult.Error("Failed to find receiver: ${it.message}")
                 }
@@ -88,6 +126,7 @@ class SameBankTransferViewModel : ViewModel() {
             }
         }
     }
+
 }
 
 sealed class PayResult {
