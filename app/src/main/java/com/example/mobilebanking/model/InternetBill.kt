@@ -1,6 +1,7 @@
 package com.example.mobilebanking.model
 
 data class InternetBill(
+    var company: String = "",
     var internetBillId: String = "",
     var billedUserName: String = "",
     var address: String = "",

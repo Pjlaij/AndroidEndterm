@@ -30,15 +30,3 @@ class BalanceUpdateViewModel : ViewModel() {
 
 }
 
-//data class History(
-//    var from: String,
-//    var to: String,
-//    var amount: Int,
-//    var type: String )
-
-//sealed class PayResult {
-//    object Idle : PayResult()
-//    object Loading : PayResult()
-//    object Success : PayResult()
-//    data class Error(val message: String) : PayResult()
-//}

@@ -12,22 +12,28 @@ import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.mobilebanking.model.UserInfo
+import com.example.mobilebanking.viewmodel.UserInfoViewModel
 
-@Preview
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InternetBillInputScreen(
+    navController: NavController,
     onCheckClick: (String, String) -> Unit = { _, _ -> },
     onBack: () -> Unit = {}
 ) {
     var selectedCompany by remember { mutableStateOf("") }
     var billCode by remember { mutableStateOf("") }
     val companies = listOf("Capi Telecom", "Viettel", "VNPT", "FPT", "Mobifone")
-
+    val viewModel: UserInfoViewModel = viewModel()
+    val context = LocalContext.current
     var expanded by remember { mutableStateOf(false) }
 
     Column(
@@ -104,7 +110,14 @@ fun InternetBillInputScreen(
 
         // Check Button
         Button(
-            onClick = { onCheckClick(selectedCompany, billCode) },
+            onClick = { viewModel.checkInternetBill(billCode,selectedCompany){ bill ->
+                if (bill != null) {
+                    navController.navigate("InternetBillConfirmationScreen/${billCode}?Company=${selectedCompany}")
+
+                } else {
+                    android.widget.Toast.makeText(context, "Bill not found", android.widget.Toast.LENGTH_SHORT).show()
+                }
+            } },
             enabled = selectedCompany.isNotBlank() && billCode.isNotBlank(),
             modifier = Modifier
                 .fillMaxWidth()

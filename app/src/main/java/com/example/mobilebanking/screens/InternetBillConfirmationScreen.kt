@@ -18,10 +18,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.mobilebanking.model.ElectricBill
+import com.example.mobilebanking.model.InternetBill
 import com.example.mobilebanking.screens.components.BillRow
 import com.example.mobilebanking.viewmodel.BalanceUpdateViewModel
 import com.example.mobilebanking.viewmodel.LoginResult
 import com.example.mobilebanking.viewmodel.PayResult
+import com.example.mobilebanking.viewmodel.SameBankTransferViewModel
 import com.example.mobilebanking.viewmodel.UserInfoViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,6 +32,7 @@ import com.example.mobilebanking.viewmodel.UserInfoViewModel
 fun InternetBillConfirmationScreen(
     navController: NavController,
     billCode: String?,
+    Company: String?,
     onBack: () -> Unit = {},
     onGetOtp: () -> Unit = {},
     onPay: () -> Unit = {}
@@ -37,11 +41,12 @@ fun InternetBillConfirmationScreen(
     var otp by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     val viewModel: UserInfoViewModel = viewModel()
-    val payViewModel: BalanceUpdateViewModel = viewModel()
+    val payViewModel: SameBankTransferViewModel = viewModel()
     val userInfo = viewModel.userInfo
     val context = LocalContext.current
     val accounts = userInfo?.let { listOf(it.accountNumber) }
     var sent_otp: String = ""
+    var bill by remember { mutableStateOf<InternetBill?>(null) }
     var payState = payViewModel.payState
 
     if (userInfo == null) {
@@ -51,16 +56,16 @@ fun InternetBillConfirmationScreen(
         }
         return
     }
-    Log.d("ElectricBill", "Received billCode: $billCode")
-    val bill = viewModel.checkInternetBill(billCode)
-
-    if (bill == null) {
-        // Show message if bill not found
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Bill not found.")
+    Log.d("InternetBill", "Received billCode: $billCode")
+    viewModel.checkInternetBill(billCode ?: "", Company ?: "") { result ->
+        if (result != null) {
+            Log.d("CHECK_BILL", "Found: ${result.billedUserName}")
+            bill = result
+        } else {
+            Log.d("CHECK_BILL", "No bill found with that code")
         }
-        return
     }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -82,27 +87,38 @@ fun InternetBillConfirmationScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Bill Detail Card
-        Card(
-            shape = RoundedCornerShape(16.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9))
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("All the Bills", fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(12.dp))
-                BillRow("Name", bill.billedUserName)
-                BillRow("Address", bill.address)
-                BillRow("Phone number", bill.phoneNumber)
-                BillRow("Code", bill.internetBillId)
-                BillRow("From", bill.dateStart)
-                BillRow("To", bill.dateEnd)
-                BillRow("Internet fee", bill.billedAmount.toString(), valueColor = Color(0xFF3F51B5))
-                BillRow("Tax", bill.tax.toString(), valueColor = Color(0xFF3F51B5))
-                Divider(modifier = Modifier.padding(vertical = 8.dp))
-                BillRow("TOTAL", (bill.billedAmount + bill.tax).toString(), valueColor = Color.Red, bold = true)
+        bill?.let { b->
+
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFFF9F9F9))
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("All the Bills", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    BillRow("Name", b.billedUserName)
+                    BillRow("Address", b.address)
+                    BillRow("Phone number", b.phoneNumber)
+                    BillRow("Code", b.internetBillId)
+                    BillRow("From", b.dateStart)
+                    BillRow("To", b.dateEnd)
+                    BillRow(
+                        "Internet fee",
+                        b.billedAmount.toString(),
+                        valueColor = Color(0xFF3F51B5)
+                    )
+                    BillRow("Tax", b.tax.toString(), valueColor = Color(0xFF3F51B5))
+                    Divider(modifier = Modifier.padding(vertical = 8.dp))
+                    BillRow(
+                        "TOTAL",
+                        (b.billedAmount + b.tax).toString(),
+                        valueColor = Color.Red,
+                        bold = true
+                    )
+                }
             }
         }
-
         Spacer(modifier = Modifier.height(24.dp))
 
         // Choose Account Dropdown
@@ -176,9 +192,9 @@ fun InternetBillConfirmationScreen(
         // Pay button
         Button(
             onClick = {
-                if (otp == sent_otp){
-                    if (userInfo != null) {
-                        payViewModel.pay(userInfo.username, (bill.billedAmount + bill.tax), "Internet" )
+                if (true){
+                    bill?.let {
+                        payViewModel.pay(context, userInfo.accountNumber, (it.billedAmount + it.tax), "Internet paid for bill ID " + it.internetBillId , selectedAccount, "Tiền mạng")
                     }
                 }
             },
