@@ -28,6 +28,7 @@ import com.example.mobilebanking.viewmodel.LoginResult
 import com.example.mobilebanking.viewmodel.PayResult
 import com.example.mobilebanking.viewmodel.UserInfoViewModel
 import com.example.mobilebanking.viewmodel.BalanceUpdateViewModel
+import com.example.mobilebanking.viewmodel.SameBankTransferViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,9 +37,11 @@ fun ElectricBillConfirmationScreen(
     billCode: String?
 ) {
     val viewModel: UserInfoViewModel = viewModel()
-    val payViewModel: BalanceUpdateViewModel = viewModel()
-    val userInfo = viewModel.userInfo
+    val payViewModel: SameBankTransferViewModel = viewModel()
     val context = LocalContext.current
+    viewModel.loadUserInfo(context)
+    val userInfo = viewModel.userInfo
+    var bill by remember { mutableStateOf<ElectricBill?>(null) }
     var selectedAccount by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
@@ -46,23 +49,18 @@ fun ElectricBillConfirmationScreen(
     var sent_otp: String = ""
     var payState = payViewModel.payState
 
-    if (userInfo == null) {
-        // Show loading while waiting for data
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-        }
-        return
-    }
-    Log.d("ElectricBill", "Received billCode: $billCode")
-    val bill = viewModel.checkElectricBill(billCode)
 
-    if (bill == null) {
-        // Show message if bill not found
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Bill not found.")
+    Log.d("ElectricBill", "Received billCode: $billCode")
+    viewModel.checkElectricBill(billCode ?: "") { result ->
+        if (result != null) {
+            Log.d("CHECK_BILL", "Found: ${result.billedUserName}")
+            bill = result
+        } else {
+            Log.d("CHECK_BILL", "No bill found with that code")
         }
-        return
     }
+
+
 
     Column(
         modifier = Modifier
@@ -85,6 +83,7 @@ fun ElectricBillConfirmationScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Bill Detail Card
+        bill?.let {b ->
         Card(
             shape = RoundedCornerShape(16.dp),
             modifier = Modifier.fillMaxWidth(),
@@ -93,19 +92,19 @@ fun ElectricBillConfirmationScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text("All the Bills", fontWeight = FontWeight.Bold)
                 Spacer(modifier = Modifier.height(12.dp))
-                BillRow("Name", bill.billedUserName)
-                BillRow("Address", bill.address)
-                BillRow("Phone number", bill.phoneNumber)
-                BillRow("Code", bill.electricBillId)
-                BillRow("From", bill.dateStart)
-                BillRow("To", bill.dateEnd)
-                BillRow("Electric fee", bill.billedAmount.toString(), valueColor = Color(0xFF3F51B5))
-                BillRow("Tax", bill.tax.toString(), valueColor = Color(0xFF3F51B5))
+                BillRow("Name", b.billedUserName)
+                BillRow("Address", b.address)
+                BillRow("Phone number", b.phoneNumber)
+                BillRow("Code", b.electricBillId)
+                BillRow("From", b.dateStart)
+                BillRow("To", b.dateEnd)
+                BillRow("Electric fee", b.billedAmount.toString(), valueColor = Color(0xFF3F51B5))
+                BillRow("Tax", b.tax.toString(), valueColor = Color(0xFF3F51B5))
                 Divider(modifier = Modifier.padding(vertical = 8.dp))
-                BillRow("TOTAL", ((bill.billedAmount + bill.tax)).toString(), valueColor = Color.Red, bold = true)
+                BillRow("TOTAL", ((b.billedAmount + b.tax)).toString(), valueColor = Color.Red, bold = true)
             }
         }
-
+        }
         Spacer(modifier = Modifier.height(24.dp))
 
         // Account dropdown
@@ -184,7 +183,9 @@ fun ElectricBillConfirmationScreen(
 
                 if (otp == sent_otp){
                     if (userInfo != null) {
-                        payViewModel.pay(userInfo.username, (bill.billedAmount + bill.tax), "Electricity" )
+                        bill?.let {
+                            payViewModel.pay(context, userInfo.accountNumber, (it.billedAmount + it.tax), "Electricity paid for bill ID " + it.electricBillId , selectedAccount, "Tiền điện")
+                        }
                     }
                 }
 

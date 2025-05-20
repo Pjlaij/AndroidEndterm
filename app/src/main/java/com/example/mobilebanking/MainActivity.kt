@@ -92,12 +92,22 @@ class MainActivity : ComponentActivity() {
                     composable("ChangePasswordScreen"){ ChangePasswordScreen(navController) }
                     composable("CheckingDetailScreen"){ CheckingDetailScreen(navController) }
                     composable("ElectricBillInputScreen"){ ElectricBillInputScreen(navController) }
+                    composable("InternetBillInputScreen"){ InternetBillInputScreen(navController) }
                     composable(
                         route = "ElectricBillConfirmationScreen/{billCode}",
                         arguments = listOf(navArgument("billCode") { type = NavType.StringType })
                     ) { backStackEntry ->
                         val billCode = backStackEntry.arguments?.getString("billCode")
                         ElectricBillConfirmationScreen(navController, billCode)
+                    }
+
+                    composable(
+                        route = "InternetBillConfirmationScreen/{billCode}",
+                        arguments = listOf(navArgument("billCode") { type = NavType.StringType })
+                    ) { backStackEntry ->
+                        val billCode = backStackEntry.arguments?.getString("billCode") ?: ""
+                        val Company = backStackEntry.arguments?.getString("Company") ?: ""
+                        InternetBillConfirmationScreen(navController, billCode, Company)
                     }
                     composable("ElectricBillSuccessScreen"){ ElectricBillSuccessScreen(navController) }
                     composable("UpdatePasswordScreen"){ UpdatePasswordScreen(navController) }

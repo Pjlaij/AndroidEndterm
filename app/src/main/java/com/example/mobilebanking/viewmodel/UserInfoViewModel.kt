@@ -9,7 +9,10 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import java.sql.Date
 import java.time.LocalDate
 
@@ -70,29 +73,48 @@ class UserInfoViewModel : ViewModel() {
      }
  }
 /////////////////////////////////////////////////////////////////////////////
-public fun checkElectricBill(billCode: String?): ElectricBill? {
-    val bills = userInfo?.electricBill ?: return null
-    for (bill in bills) {
-        if (bill.electricBillId.trim() == billCode?.trim()) {
-            return bill
-        }
+fun checkElectricBill(billCode: String?, onResult: (ElectricBill?) -> Unit) {
+    if (billCode.isNullOrBlank()) {
+        onResult(null)
+        return
     }
-    return null
 
+    val databaseRef = FirebaseDatabase.getInstance().getReference("bills/electricBills")
+    databaseRef.child(billCode.trim()).addListenerForSingleValueEvent(object : ValueEventListener {
+        override fun onDataChange(snapshot: DataSnapshot) {
+            val bill = snapshot.getValue(ElectricBill::class.java)
+            onResult(bill)
+        }
 
+        override fun onCancelled(error: DatabaseError) {
+            onResult(null)
+        }
+    })
 }
 
-    public fun checkInternetBill(billCode: String?): InternetBill? {
-        val bills = userInfo?.internetBill ?: return null
-        for (bill in bills) {
-            if (bill.internetBillId.trim() == billCode?.trim()) {
-                return bill
-            }
+    fun checkInternetBill(billCode: String?, company: String?, onResult: (InternetBill?) -> Unit) {
+        if (billCode.isNullOrBlank() || company.isNullOrBlank()) {
+            onResult(null)
+            return
         }
-        return null
 
+        val databaseRef = FirebaseDatabase.getInstance().getReference("bills/internetBills")
+        databaseRef.child(billCode.trim()).addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val bill = snapshot.getValue(InternetBill::class.java)
+                if (bill != null && bill.company == company.trim()) {
+                    onResult(bill)
+                } else {
+                    onResult(null)
+                }
+            }
 
+            override fun onCancelled(error: DatabaseError) {
+                onResult(null)
+            }
+        })
     }
+
 
 }
 

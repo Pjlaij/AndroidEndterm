@@ -53,7 +53,38 @@ class SameBankTransferViewModel : ViewModel() {
                     return@addOnSuccessListener
                 }
 
-                // Step 2: Find receiver
+                // ✅ Case 1: Paying for utility (same account)
+                if (sender.accountNumber == receiverAccountNumber) {
+                    // Deduct amount
+                    if (account == "Saving") {
+                        val updatedBalance = senderBalance - amount
+                        dbRef.child(senderUid)
+                            .child("savingAccount")
+                            .child("savingAccountBalance")
+                            .setValue(updatedBalance)
+                    } else {
+                        val updatedBalance = senderBalance - amount
+                        dbRef.child(senderUid)
+                            .child("balance")
+                            .setValue(updatedBalance)
+                    }
+
+                    // Add history
+                    val historyEntry = History(
+                        from = if (account == "Saving") "${sender.accountNumber}'s Saving" else sender.accountNumber,
+                        to = "Utility Payment",
+                        amount = amount,
+                        type = type,
+                        content = content,
+                        timestamp = System.currentTimeMillis()
+                    )
+
+                    dbRef.child(senderUid).child("history").push().setValue(historyEntry)
+                    payState = PayResult.Success
+                    return@addOnSuccessListener
+                }
+
+                // ✅ Case 2: Transfer to another user
                 dbRef.get().addOnSuccessListener { allUsersSnapshot ->
                     var receiverUid: String? = null
                     var receiver: UserInfo? = null
@@ -89,28 +120,15 @@ class SameBankTransferViewModel : ViewModel() {
                             .setValue(updatedSenderBalance)
                     }
 
-                    // Add history
-                    var historyEntry = History()
-                    if (account == "Saving") {
-                         historyEntry = History(
-                            from = sender.accountNumber + "'s Saving",
-                            to = receiverAccountNumber,
-                            amount = amount,
-                            type = type,
-                            content = content,
-                            timestamp = System.currentTimeMillis()
-                        )
-                    }
-                    else{
-                         historyEntry = History(
-                            from = sender.accountNumber,
-                            to = receiverAccountNumber,
-                            amount = amount,
-                            type = type,
-                            content = content,
-                            timestamp = System.currentTimeMillis()
-                        )
-                    }
+                    // Add history for both sender and receiver
+                    val historyEntry = History(
+                        from = if (account == "Saving") "${sender.accountNumber}'s Saving" else sender.accountNumber,
+                        to = receiverAccountNumber,
+                        amount = amount,
+                        type = type,
+                        content = content,
+                        timestamp = System.currentTimeMillis()
+                    )
 
                     dbRef.child(senderUid).child("history").push().setValue(historyEntry)
                     dbRef.child(receiverUid).child("history").push().setValue(historyEntry)
@@ -126,6 +144,7 @@ class SameBankTransferViewModel : ViewModel() {
             }
         }
     }
+
 
 }
 

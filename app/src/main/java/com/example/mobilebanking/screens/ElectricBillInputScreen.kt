@@ -1,5 +1,6 @@
 package com.example.mobilebanking.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -82,7 +83,16 @@ fun ElectricBillInputScreen(
                 Spacer(modifier = Modifier.height(20.dp))
 
                 Button(
-                    onClick = { bill = viewModel.checkElectricBill(billCode); if (bill != null) { navController.navigate("ElectricBillConfirmationScreen/${billCode}")} },
+                    onClick = {
+                        viewModel.checkElectricBill(billCode) { bill ->
+                            if (bill != null) {
+                                navController.navigate("ElectricBillConfirmationScreen/${billCode}")
+                            } else {
+                                Toast.makeText(context, "Bill not found", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                    ,
                     enabled = billCode.isNotEmpty(),
                     modifier = Modifier
                         .fillMaxWidth()
