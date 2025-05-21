@@ -38,6 +38,7 @@ fun LoginScreen(
     var isPasswordVisible by remember { mutableStateOf(false) }
     val context = LocalContext.current
     val loginState = viewModel.loginState
+    var isAdmin = viewModel.isAdmin
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -139,8 +140,16 @@ fun LoginScreen(
                     // Navigate or show success message
                     LaunchedEffect(Unit) {
                         val username = viewModel.username
-                        onLoginClick()
-                        viewModel.resetState()
+                            if (isAdmin) {
+                                navController.navigate("AdminScreen") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            } else {
+                                navController.navigate("home/${username ?: "Guest"}") {
+                                    popUpTo("login") { inclusive = true }
+                                }
+                            }
+
                     }
                 }
                 is LoginResult.Error -> {

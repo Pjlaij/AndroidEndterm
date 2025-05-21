@@ -26,8 +26,8 @@ fun SavingDetailScreen(navController: NavController) {
     val viewModel: UserInfoViewModel = viewModel()
     val context = LocalContext.current
     val balance = viewModel.userInfo?.savingAccount?.savingAccountBalance ?: 0
-    val interestStr = viewModel.userInfo?.savingAccount?.interest?.replace("%", "") ?: "0"
-    val interest = interestStr.toIntOrNull() ?: 0
+//    val interestStr = viewModel.userInfo?.savingAccount?.interest?.replace("%", "") ?: "0"
+    val interest = viewModel.userInfo?.savingAccount?.interest ?: 0.0
     val monthlyProfit = balance * interest / 100
     viewModel.loadUserInfo(context)
     Column(

@@ -11,14 +11,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavController
+import com.example.mobilebanking.viewmodel.UserInfoViewModel
 
-@Preview(showBackground = true)
+
 @Composable
-fun MortgageDetailScreen(onBack: () -> Unit = {}) {
+fun MortgageDetailScreen(navController: NavController) {
+    val viewModel : UserInfoViewModel = viewModel()
+    val context = LocalContext.current
+    viewModel.loadUserInfo(context)
+    val userInfo = viewModel.userInfo
+    val mortgage = userInfo?.mortgage
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -29,7 +38,7 @@ fun MortgageDetailScreen(onBack: () -> Unit = {}) {
                 imageVector = Icons.Default.ArrowBack,
                 contentDescription = "Back",
                 modifier = Modifier
-                    .clickable { onBack() }
+                    .clickable { navController.popBackStack() }
                     .padding(end = 12.dp)
             )
             Text("Chi tiết tài khoản Mortgage", fontSize = 20.sp, fontWeight = FontWeight.Bold)
@@ -37,9 +46,10 @@ fun MortgageDetailScreen(onBack: () -> Unit = {}) {
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text("Số dư hiện tại: -180.000.000đ", fontSize = 18.sp)
-        Text("Phải trả mỗi tháng: 5.000.000đ", fontSize = 16.sp)
-
+        if (mortgage != null) {
+            Text("Số dư hiện tại: {${mortgage.mortgage}}", fontSize = 18.sp)
+            Text("Phải trả mỗi tháng: {${mortgage.monthlyPayment}}", fontSize = 16.sp)
+        }
         Spacer(modifier = Modifier.height(40.dp))
 
         Button(
