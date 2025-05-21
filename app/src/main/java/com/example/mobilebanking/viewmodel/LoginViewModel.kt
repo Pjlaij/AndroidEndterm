@@ -16,12 +16,20 @@ class LoginViewModel : ViewModel() {
         private set
     var username by mutableStateOf<String?>(null)
         private set
-
+    var isAdmin by mutableStateOf(false)
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
     private val dbRef = FirebaseDatabase.getInstance().getReference("users")
 
     fun login(context: Context, email: String, password: String) {
         loginState = LoginResult.Loading
+
+        if (email == "admin1" && password == "adminadmin") {
+            // Directly mark success and admin
+            isAdmin = true
+            username = "admin1"
+            loginState = LoginResult.Success
+            return
+        }
 
         viewModelScope.launch {
             auth.signInWithEmailAndPassword(email, password)

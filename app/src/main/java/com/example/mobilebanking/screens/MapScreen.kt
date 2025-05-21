@@ -28,6 +28,7 @@ import com.google.accompanist.permissions.PermissionState
 import com.google.accompanist.permissions.isGranted
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.compose.*
@@ -179,33 +180,26 @@ fun MapScreen(
 }
 
 @SuppressLint("MissingPermission")
-@OptIn(ExperimentalCoroutinesApi::class)
 suspend fun getUserLocation(fusedLocationClient: FusedLocationProviderClient): LatLng {
-    return suspendCancellableCoroutine { cont ->
-        val locationRequest = com.google.android.gms.location.LocationRequest
-            .create()
-            .setPriority(com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY)
-            .setNumUpdates(1)
-            .setInterval(1000)
+    return try {
+        val location = fusedLocationClient.getCurrentLocation(
+            Priority.PRIORITY_HIGH_ACCURACY,
+            null
+        ).await()
 
-        val callback = object : com.google.android.gms.location.LocationCallback() {
-            override fun onLocationResult(result: com.google.android.gms.location.LocationResult) {
-                val location: Location? = result.lastLocation
-                if (location != null) {
-                    cont.resume(LatLng(location.latitude, location.longitude), null)
-                } else {
-                    cont.resume(LatLng(10.762622, 106.660172), null) // fallback
-                }
-            }
-
-            override fun onLocationAvailability(p0: com.google.android.gms.location.LocationAvailability) {
-                super.onLocationAvailability(p0)
-            }
+        if (location != null) {
+            println("📍 Current location: ${location.latitude}, ${location.longitude}")
+            LatLng(location.latitude, location.longitude)
+        } else {
+            println("⚠️ Location is null, fallback")
+            LatLng(10.762622, 106.660172) // default to HCMC
         }
-
-        fusedLocationClient.requestLocationUpdates(locationRequest, callback, null)
+    } catch (e: Exception) {
+        println("❌ Location error: ${e.message}")
+        LatLng(10.762622, 106.660172)
     }
 }
+
 
 
 

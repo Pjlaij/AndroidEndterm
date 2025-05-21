@@ -88,7 +88,7 @@ fun DashboardScreen(
                         IconButton(onClick = { }) {
                             Icon(Icons.Default.Notifications, contentDescription = null, tint = Color.White)
                         }
-                        IconButton(onClick = { }) {
+                        IconButton(onClick = {navController.navigate("login") }) {
                             Icon(Icons.Default.Logout, contentDescription = "Logout", tint = Color.White)
                         }
                     }

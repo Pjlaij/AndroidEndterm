@@ -60,12 +60,7 @@ class MainActivity : ComponentActivity() {
             MobileBankingTheme {
                 NavHost(navController = navController, startDestination = "login"){
                     composable("login"){
-                        LoginScreen(navController,
-                            onLoginClick = {
-                                val username = loginviewModel.username ?: "Guest"
-                                navController.navigate("home/$username")
-                            }
-                        )
+                        LoginScreen(navController)
                     }
                     composable("register"){
                         RegisterScreen(navController, onSignUpClick = {
@@ -76,6 +71,7 @@ class MainActivity : ComponentActivity() {
                         val username = backStackEntry.arguments?.getString("username") ?: "Guest"
                         DashboardScreen(userName = username, selectedTab = 0, onTabSelected = { selectedTab = it }, navController = navController)
                     }
+                    composable("AdminScreen"){ AdminScreen() }
                     composable("backhome"){ DashboardScreen(userName = "test", selectedTab = 0, onTabSelected = { selectedTab = it }, navController = navController) }
                     composable("settings"){
                         SettingScreen(2, onTabSelected = {selectedTab = it}, navController = navController)
@@ -121,6 +117,7 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("TransactionScreen"){ TransactionScreen(navController) }
                     composable("TransactionDetailScreen"){ TransactionDetailScreen(navController) }
+                    composable("MortgageDetailScreen"){ MortgageDetailScreen(navController) }
 
                 }
 

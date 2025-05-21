@@ -6,27 +6,25 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.mobilebanking.viewmodel.AdminViewModel
 
 data class Customer(
     val name: String,
-    val email: String
+    val email: String,
+    val interest: Double = 0.0 // Include interest from Firebase
 )
-@Preview
+
 @Composable
 fun AdminScreen(
-    customers: List<Customer> = listOf(
-        Customer("Nguyễn Văn A", "a@gmail.com"),
-        Customer("Trần Thị B", "b@yahoo.com"),
-        Customer("Lê Văn C", "c@hotmail.com")
-    ),
-    onCreateCustomer: (Customer) -> Unit = {},
-    onUpdateInterestRate: (Double) -> Unit = {}
+
 ) {
-    var interestRateText by remember { mutableStateOf("6.0") }
+    val viewModel: AdminViewModel = viewModel()
+    val customers by viewModel.customers.collectAsState()
     var newName by remember { mutableStateOf("") }
     var newEmail by remember { mutableStateOf("") }
+    var interestRateText by remember { mutableStateOf("6.0") }
 
     Column(
         modifier = Modifier
@@ -37,7 +35,6 @@ fun AdminScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Hiển thị danh sách khách
         customers.forEach { customer ->
             Card(
                 modifier = Modifier
@@ -48,6 +45,7 @@ fun AdminScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("👤 ${customer.name}")
                     Text("📧 ${customer.email}")
+                    Text("💰 Lãi suất: ${customer.interest}%")
                 }
             }
         }
@@ -79,7 +77,7 @@ fun AdminScreen(
         Button(
             onClick = {
                 if (newName.isNotBlank() && newEmail.isNotBlank()) {
-                    onCreateCustomer(Customer(newName, newEmail))
+                    viewModel.addCustomer(Customer(newName, newEmail))
                     newName = ""
                     newEmail = ""
                 }
@@ -109,7 +107,7 @@ fun AdminScreen(
             onClick = {
                 val rate = interestRateText.toDoubleOrNull()
                 if (rate != null && rate > 0) {
-                    onUpdateInterestRate(rate)
+                    viewModel.updateInterestRateForAll(rate)
                 }
             },
             modifier = Modifier.fillMaxWidth()
