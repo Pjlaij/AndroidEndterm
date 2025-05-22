@@ -51,7 +51,21 @@ fun UtilitiesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .aspectRatio(1f)
-                        .clickable { onUtilityClick(utility.label) },
+                        .clickable {
+                            // Map label to screen route
+                            val route = when (utility.label) {
+                                "Tiền điện" -> "ElectricBillInputScreen"
+                                "Tiền nước" -> "UtilitiesScreen"
+                                "Nạp điện thoại" -> "UtilitiesScreen"
+                                "Vé máy bay" -> "UtilitiesScreen"
+                                "Truyền hình" -> "UtilitiesScreen"
+                                "Internet" -> "InternetBillInputScreen"
+                                else -> ""
+                            }
+                            if (route.isNotEmpty()) {
+                                navController.navigate(route)
+                            }
+                        },
                     elevation = CardDefaults.cardElevation(4.dp)
                 ) {
                     Box(

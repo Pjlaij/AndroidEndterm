@@ -1,7 +1,11 @@
 package com.example.mobilebanking.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,9 +21,7 @@ data class Customer(
 )
 
 @Composable
-fun AdminScreen(
-
-) {
+fun AdminScreen() {
     val viewModel: AdminViewModel = viewModel()
     val customers by viewModel.customers.collectAsState()
     var newName by remember { mutableStateOf("") }
@@ -30,22 +32,31 @@ fun AdminScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(24.dp)
+            .verticalScroll(rememberScrollState()) // Make the whole screen scrollable
     ) {
         Text("Quản lý khách hàng", style = MaterialTheme.typography.titleLarge)
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        customers.forEach { customer ->
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                elevation = CardDefaults.cardElevation(2.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("👤 ${customer.name}")
-                    Text("📧 ${customer.email}")
-                    Text("💰 Lãi suất: ${customer.interest}%")
+        // Show only 3 customer cards in a scrollable list with fixed height
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(220.dp), // Adjust height for approx. 3 cards
+            userScrollEnabled = true
+        ) {
+            items(customers) { customer ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    elevation = CardDefaults.cardElevation(2.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("👤 ${customer.name}")
+                        Text("📧 ${customer.email}")
+                        Text("💰 Lãi suất: ${customer.interest}%")
+                    }
                 }
             }
         }
@@ -107,7 +118,7 @@ fun AdminScreen(
             onClick = {
                 val rate = interestRateText.toDoubleOrNull()
                 if (rate != null && rate > 0) {
-                    viewModel.updateInterestRateForAll(rate)
+                    viewModel.updateInterestRateForAll(rate.toString())
                 }
             },
             modifier = Modifier.fillMaxWidth()
@@ -116,3 +127,4 @@ fun AdminScreen(
         }
     }
 }
+
