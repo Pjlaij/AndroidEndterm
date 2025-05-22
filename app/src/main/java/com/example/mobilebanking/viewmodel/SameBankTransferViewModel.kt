@@ -37,7 +37,6 @@ class SameBankTransferViewModel : ViewModel() {
         viewModelScope.launch {
             dbRef.child(senderUid).get().addOnSuccessListener { senderSnapshot ->
                 val sender = senderSnapshot.getValue(UserInfo::class.java)
-
                 if (sender == null) {
                     payState = PayResult.Error("Sender not found.")
                     return@addOnSuccessListener

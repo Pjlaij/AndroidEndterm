@@ -60,7 +60,7 @@ class AdminViewModel : ViewModel() {
         )
         newUserRef.setValue(userData)
     }
-    fun updateInterestRateForAll(rate: Double) {
+    fun updateInterestRateForAll(rate: String) {
         val dbRef = FirebaseDatabase.getInstance().getReference("users")
         dbRef.get().addOnSuccessListener { snapshot ->
             snapshot.children.forEach { userSnapshot ->
