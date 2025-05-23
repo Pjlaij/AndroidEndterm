@@ -40,10 +40,11 @@ fun InternetBillConfirmationScreen(
     var selectedAccount by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    val context = LocalContext.current
     val viewModel: UserInfoViewModel = viewModel()
+    viewModel.loadUserInfo(context)
     val payViewModel: SameBankTransferViewModel = viewModel()
     val userInfo = viewModel.userInfo
-    val context = LocalContext.current
     val accounts = userInfo?.let { listOf(it.accountNumber) }
     var sent_otp: String = ""
     var bill by remember { mutableStateOf<InternetBill?>(null) }
@@ -57,6 +58,8 @@ fun InternetBillConfirmationScreen(
         return
     }
     Log.d("InternetBill", "Received billCode: $billCode")
+    Log.d("InternetBill:" , "$Company")
+
     viewModel.checkInternetBill(billCode ?: "", Company ?: "") { result ->
         if (result != null) {
             Log.d("CHECK_BILL", "Found: ${result.billedUserName}")

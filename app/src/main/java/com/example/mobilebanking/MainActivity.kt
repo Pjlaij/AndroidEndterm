@@ -1,5 +1,7 @@
 package com.example.mobilebanking
 
+import android.app.Activity
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -38,8 +40,11 @@ import com.example.mobilebanking.screens.QRScreen
 import com.example.mobilebanking.screens.EditProfileScreen
 import com.example.mobilebanking.screens.UpdatePasswordScreen
 import com.example.mobilebanking.screens.FaceIdSettingScreen
-
+import android.Manifest
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -53,7 +58,17 @@ import com.example.mobilebanking.viewmodel.LoginViewModel
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         setContent {
+            if (ContextCompat.checkSelfPermission(LocalContext.current, Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+
+                ActivityCompat.requestPermissions(
+                    LocalContext.current as Activity,
+                    arrayOf(Manifest.permission.SEND_SMS),
+                    1
+                )
+            }
             var selectedTab by remember { mutableStateOf(0) }
             val navController = rememberNavController()
             val loginviewModel: LoginViewModel = viewModel()
@@ -96,10 +111,12 @@ class MainActivity : ComponentActivity() {
                         val billCode = backStackEntry.arguments?.getString("billCode")
                         ElectricBillConfirmationScreen(navController, billCode)
                     }
-
                     composable(
-                        route = "InternetBillConfirmationScreen/{billCode}",
-                        arguments = listOf(navArgument("billCode") { type = NavType.StringType })
+                        route = "InternetBillConfirmationScreen/{billCode}/{Company}",
+                        arguments = listOf(
+                            navArgument("billCode") { type = NavType.StringType },
+                            navArgument("Company") { type = NavType.StringType }
+                        )
                     ) { backStackEntry ->
                         val billCode = backStackEntry.arguments?.getString("billCode") ?: ""
                         val Company = backStackEntry.arguments?.getString("Company") ?: ""

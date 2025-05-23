@@ -26,8 +26,9 @@ class AdminViewModel : ViewModel() {
                 for (userSnapshot in snapshot.children) {
                     val name = userSnapshot.child("name").getValue(String::class.java)
                     val email = userSnapshot.child("email").getValue(String::class.java)
-                    if (!name.isNullOrBlank() && !email.isNullOrBlank()) {
-                        customerList.add(Customer(name, email))
+                    val accountNumber = userSnapshot.child("accountNumber").getValue(String::class.java)
+                    if (!name.isNullOrBlank() && !email.isNullOrBlank() && !accountNumber.isNullOrBlank()) {
+                        customerList.add(Customer(name, email,accountNumber))
                     }
                 }
                 _customers.value = customerList
@@ -71,4 +72,22 @@ class AdminViewModel : ViewModel() {
             // handle error
         }
     }
+
+    fun addMoneyToAccount(accountNumber: String, amount: Int) {
+        dbRef.get().addOnSuccessListener { snapshot ->
+            for (userSnapshot in snapshot.children) {
+                val accNum = userSnapshot.child("accountNumber").getValue(String::class.java)
+                if (accNum == accountNumber) {
+                    val balanceRef = userSnapshot.ref.child("balance")
+                    val currentBalance = userSnapshot.child("balance").getValue(Int::class.java) ?: 0
+                    balanceRef.setValue(currentBalance + amount)
+                    break
+                }
+            }
+        }.addOnFailureListener {
+            // Handle error, e.g., log or notify the user
+        }
+    }
+
+
 }

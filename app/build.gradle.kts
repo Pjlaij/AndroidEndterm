@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.mobilebanking"
-        minSdk = 24
+        minSdk = 33
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -60,6 +60,8 @@ dependencies {
     implementation("com.google.maps.android:maps-utils-ktx:3.4.0")
     implementation("com.google.android.gms:play-services-location:21.0.1")
     implementation("com.google.accompanist:accompanist-permissions:0.34.0")
+    implementation(fileTree("libs") { include("*.jar", "*.aar") })
+    implementation("androidx.legacy:legacy-support-v4:1.0.0")
     implementation(libs.vision.common)
     implementation(libs.play.services.mlkit.face.detection)
     testImplementation(libs.junit)

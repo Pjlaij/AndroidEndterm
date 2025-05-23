@@ -112,7 +112,7 @@ fun InternetBillInputScreen(
         Button(
             onClick = { viewModel.checkInternetBill(billCode,selectedCompany){ bill ->
                 if (bill != null) {
-                    navController.navigate("InternetBillConfirmationScreen/${billCode}?Company=${selectedCompany}")
+                    navController.navigate("InternetBillConfirmationScreen/${billCode}/${selectedCompany}")
 
                 } else {
                     android.widget.Toast.makeText(context, "Bill not found", android.widget.Toast.LENGTH_SHORT).show()

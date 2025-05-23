@@ -1,5 +1,6 @@
 package com.example.mobilebanking.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,8 +18,10 @@ import com.example.mobilebanking.viewmodel.AdminViewModel
 data class Customer(
     val name: String,
     val email: String,
-    val interest: Double = 0.0 // Include interest from Firebase
+    val accountNumber: String = "",
+    val interest: Double = 0.0
 )
+
 
 @Composable
 fun AdminScreen() {
@@ -27,6 +30,10 @@ fun AdminScreen() {
     var newName by remember { mutableStateOf("") }
     var newEmail by remember { mutableStateOf("") }
     var interestRateText by remember { mutableStateOf("6.0") }
+    var showDialog by remember { mutableStateOf(false) }
+    var selectedAccountNumber by remember { mutableStateOf("") }
+    var balanceInput by remember { mutableStateOf("") }
+
 
     Column(
         modifier = Modifier
@@ -46,19 +53,62 @@ fun AdminScreen() {
             userScrollEnabled = true
         ) {
             items(customers) { customer ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp),
-                    elevation = CardDefaults.cardElevation(2.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("👤 ${customer.name}")
-                        Text("📧 ${customer.email}")
-                        Text("💰 Lãi suất: ${customer.interest}%")
-                    }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clickable {
+                        selectedAccountNumber = customer.accountNumber
+                        showDialog = true
+                    },
+                elevation = CardDefaults.cardElevation(2.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("👤 ${customer.name}")
+                    Text("📧 ${customer.email}")
+                    Text("💳 Số tài khoản: ${customer.accountNumber}")
+                    Text("💰 Lãi suất: ${customer.interest}%")
                 }
             }
+        }
+
+        }
+        if (showDialog) {
+            AlertDialog(
+                onDismissRequest = {
+                    showDialog = false
+                    balanceInput = ""
+                },
+                title = { Text("Nạp tiền vào tài khoản") },
+                text = {
+                    OutlinedTextField(
+                        value = balanceInput,
+                        onValueChange = { balanceInput = it },
+                        label = { Text("Số tiền") },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val amount = balanceInput.toIntOrNull()
+                        if (amount != null && amount > 0) {
+                            viewModel.addMoneyToAccount(selectedAccountNumber, amount)
+                        }
+                        showDialog = false
+                        balanceInput = ""
+                    }) {
+                        Text("Xác nhận")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = {
+                        showDialog = false
+                        balanceInput = ""
+                    }) {
+                        Text("Hủy")
+                    }
+                }
+            )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
